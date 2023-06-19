@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.loyaltyservice.dao.TaskDao">
+    <resultMap id = "taskResult" type = "com.loyaltyservice.model.Task" >
+      <result property = "id" column = "id"/>
+      <result property = "taskType.id" column = "ttype_id"/>
+      <result property = "taskType.name" column = "ttype_name"/>
+      <result property = "taskStatus.id" column = "tstatus_id"/>
+      <result property = "taskStatus.name" column = "tstatus_name"/>
+   </resultMap>
+ 
+   <insert id="createTask" parameterType = "com.loyaltyservice.model.Task" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+ 		insert into tqueue (ttp, tstatus, created_on, is_active)
+		values (#{taskType.id}, #{taskStatus.id}, now(), #{isActive})
+		<selectKey resultType="java.lang.Long" keyProperty="id" keyColumn="id" order="AFTER">
+			select LAST_INSERT_ID() as id
+		</selectKey>
+    </insert>
+    <update id="updateTask" parameterType = "com.loyaltyservice.model.Task">
+    	update tqueue set tstatus = #{taskStatus.id}, is_active = #{isActive} where id = #{id}
+    </update>
+	<select id="getTask" resultMap="taskResult">
+		select 
+			t.id,
+			ttp.id as ttype_id,
+			ttp.name as ttype_name,
+			tst.id as tstatus_id,
+			tst.name as tstatus_name
+		from tqueue t
+		left outer join tasktype ttp on ttp.id = t.ttp
+		left outer join taskstatus tst on tst.id = t.tstatus
+		where t.is_active=1 and ttp.is_active=1 and tst.is_active=1
+		<if test="taskId != null and taskId != ''">
+			and t.id = #{taskId}
+		</if>
+		<if test="activeFlag != null and activeFlag != ''">
+			and t.is_active = #{activeFlag}
+		</if>
+    </select>
+    <insert id="createTaskParameter" parameterType = "com.loyaltyservice.model.TaskParameter">
+    		insert into tparam (tid, param_nm, param_val)
+			values (#{taskId}, #{parameterName}, #{parameterValue})
+    </insert>
+    <select id="getTaskParameterByTaskId" resultType="com.loyaltyservice.model.TaskParameter">
+    	select 
+    		tid as taskId,
+    		param_nm as parameterName,
+    		param_val as parameterValue
+    	 from tparam where tid = #{taskId}
+    </select>
+</mapper>

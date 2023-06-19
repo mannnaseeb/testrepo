@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.loyaltyservice.dao.CouponDao">
+<resultMap id = "couponResult" type = "com.loyaltyservice.model.Coupon">
+      <result property = "id" column = "couponId"/>
+      <result property = "name" column = "couponName"/>
+      <result property = "description" column = "couponDesc"/>
+      <result property = "evetType.id" column = "eventTypeId"/>
+      <result property = "evetType.name" column = "eventTypeName"/>
+      <result property = "rule.id" column = "ruleId"/>
+      <result property = "rule.name" column = "ruleName"/>
+      <result property = "rule.description" column = "ruleDesc"/>
+      <result property = "rule.ruleCalc" column = "ruleCalc"/>
+      <result property = "campaign.id" column = "campaignId"/>
+      <result property = "campaign.name" column = "campaignName"/>
+      <result property = "campaign.description" column = "campaignDesc"/>
+      <result property = "createdBy" column = "createdBy"/>
+      <result property = "createdOn" column = "createdDate"/>
+      <result property = "modifiedBy" column = "modifiedBy"/>
+      <result property = "modifiedOn" column = "modifiedDate"/>
+    </resultMap> 
+   	<!-- Create reward -->
+	<insert id="createCoupon" parameterType="com.loyaltyservice.model.Coupon">
+		insert into coupon(COUPON_NAME, COUPON_DESCRIPTION, EVENT_TYPE_ID, RULE_ID, CAMPAIGN_ID, CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON, IS_ACTIVE)
+		value(#{name}, #{description}, #{evetType.id}, #{rule.id}, #{campaign.id}, #{createdBy}, now(), #{modifiedBy}, now(), 1);
+	</insert>
+    <select id="getCoupon" resultMap="couponResult">
+    select
+		cp.coupon_id as couponId,
+		cp.coupon_name as couponName,
+		cp.coupon_description as couponDesc,
+        cp.event_type_id as eventTypeId,
+        r.rule_id as ruleId,
+        r.rule_name as ruleName,
+        r.description as ruleDesc,
+		r.rule_calc as ruleCalc,
+		c.campaign_id as campaignId,
+        c.campaign_name as campaignName,
+        c.description as campaignDesc,
+		cp.created_by as createdBy,
+		cp.created_on as createdDate,
+		cp.modified_by as modifiedBy,
+		cp.modified_on as modifiedDate
+		from `coupon` cp
+        left outer join rule r on r.rule_id=cp.rule_id
+        left outer join campaign c on c.campaign_id=cp.campaign_id
+        where c.is_active=1 and r.is_active=1
+		<if test="couponId != null and couponId != ''">
+			and cp.coupon_id = #{couponId}
+		</if>
+		<if test="eventTypeId != null and eventTypeId != ''">
+			and cp.event_type_id = #{eventTypeId}
+		</if>
+		<if test="couponName != null and couponName != ''">
+			and cp.coupon_name = #{couponName}
+		</if>
+		<if test="ruleId != null and ruleId != ''">
+			and cp.rule_id = #{ruleId}
+		</if>
+		<if test="campaignId != null and campaignId != ''">
+			and cp.campaign_id = #{campaignId}
+		</if>
+		<if test="orderBy != null">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+</mapper>

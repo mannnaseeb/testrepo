@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.productcatalogue.dao.DatacenterLocationDao">
+	<select id="getLocations"
+		resultType="com.productcatalogue.model.DatacenterLocationModel">
+		select distinct
+		loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from datacenter_location loc
+		left outer join region reg on loc.region_id = reg.id
+        left outer join country ctry on loc.country_id = ctry.id
+        left outer join metro metro on loc.metro_id = metro.id
+        left outer join campus cmp on loc.campus_id = cmp.id
+		where loc.is_active=1 and reg.is_active=1 and ctry.is_active=1 and metro.is_active and cmp.is_active=1
+		<if test="locationId != null and locationId != ''">
+			and loc.id = #{locationId}
+		</if>
+		<if test="metroId != null and metroId != ''">
+			and loc.metro_id = #{metroId}
+		</if>
+		<if test="regionId != null and regionId != ''">
+			and loc.region_id = #{regionId}
+		</if>
+		<if test="countryId != null and countryId != ''">
+			and loc.country_id = #{countryId}
+		</if>
+		<if test="campusId != null and campusId != ''">
+			and loc.campus_id = #{campusId}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	<select id="getLocationCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from datacenter_location loc
+		left outer join region reg on loc.region_id = reg.id
+        left outer join country ctry on loc.country_id = ctry.id
+        left outer join metro metro on loc.metro_id = metro.id
+        left outer join campus cmp on loc.campus_id = cmp.id
+		where loc.is_active=1 and reg.is_active=1 and ctry.is_active=1 and metro.is_active and cmp.is_active=1
+		<if test="locationId != null and locationId != ''">
+			and id = #{locationId}
+		</if>
+		<if test="metroId != null and metroId != ''">
+			and metro_id = #{metroId}
+		</if>
+		<if test="regionId != null and regionId != ''">
+			and region_id = #{regionId}
+		</if>
+		<if test="countryId != null and countryId != ''">
+			and country_id = #{countryId}
+		</if>
+		<if test="campusId != null and campusId != ''">
+			and campus_id = #{campusId}
+		</if> ) as locationCount 
+	</select>
+	
+	
+	
+	
+	<select id="getDatacenterLocation"
+		resultType="com.productcatalogue.model.DatacenterLocationModel">
+		select distinct loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from
+		datacenter_location loc
+		left outer
+		join region reg on loc.region_id=reg.id
+		left outer join country
+		ctry on
+		loc.country_id=ctry.id
+		left outer join metro metro on
+		loc.metro_id=metro.id
+		left outer join campus cmp on
+		loc.campus_id=cmp.id
+		where loc.is_active=1
+		<if test="locationId != null and locationId != ''">
+			and loc.id = #{locationId}
+		</if>
+	</select>
+	
+	
+	<select id="getLocationMap"
+		resultType="com.productcatalogue.model.DatacenterLocationModel">
+		select distinct
+		loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from location_product_mapping map
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+        left outer join region reg on loc.region_id = reg.id
+        left outer join country ctry on loc.country_id = ctry.id
+        left outer join metro metro on loc.metro_id = metro.id
+        left outer join campus cmp on loc.campus_id = cmp.id
+		where loc.is_active=1 AND map.is_active=1 and map.status=1 and map.approval='approved'
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			map.product_ownerType_id =  #{productOwnerTypeId}
+		</if>
+		<if test="locationIds != null and locationIds != ''">
+			and map.datacenter_location_id in (#{locationIds})
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	
+	<select id="getLocationMapCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from location_product_mapping map
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+        left outer join region reg on loc.region_id = reg.id
+        left outer join country ctry on loc.country_id = ctry.id
+        left outer join metro metro on loc.metro_id = metro.id
+        left outer join campus cmp on loc.campus_id = cmp.id
+		where loc.is_active=1 AND map.is_active=1 and map.status=1 and map.approval='approved' 
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and product_owner_type_id = #{productOwnerTypeId}
+		</if> 
+		<if test="locationIds != null and locationIds != ''">
+			and loc.id = #{locationIds}
+		</if> 
+		) as locationMapCount
+	</select>
+	
+	
+	<select id="getProductPartnerAndLocationCountMap" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		loc.id as locationId,
+		reg.name as region,
+		ctry.name as country,
+		metro.name as metro,
+		cmp.name as campus,
+		loc.latitude as
+		latitude,
+		loc.longitude as longitude,
+		loc.is_utility_power as
+		isUtilityPower,
+		loc.amount_of_utiltiy_power as
+		amountOfUtilityPower,
+		loc.construction_status,
+		loc.starting_construction_level
+		from location_product_mapping map
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+        left outer join region reg on loc.region_id = reg.id
+        left outer join country ctry on loc.country_id = ctry.id
+        left outer join metro metro on loc.metro_id = metro.id
+        left outer join campus cmp on loc.campus_id = cmp.id
+		where loc.is_active=1 AND map.is_active=1 and map.status=1 and map.approval='approved'
+
+		<if test="partnerId != null and partnerId != ''">
+			and loc.partner_id = #{partnerId}
+		</if> 
+		<if test="locationId != null and locationId != ''">
+			and loc.datacenter_location_id = #{locationId}
+		</if> ) as productpartnerlocationcount
+	</select>  
+	
+	
+
+	<insert id="addProductLocationMap"
+		parameterType="com.productcatalogue.model.ProductLocationMap">
+		INSERT INTO location_product_mapping
+		(DATACENTER_LOCATION_ID, PRODUCT_ID,
+		PRODUCT_FAMILY_ID, PARTNER_ID,
+		PRODUCT_OWNER_TYPE_ID, IS_ACTIVE,
+		CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON)
+		VALUES (#{datacenterLocationId}, #{productId},
+		#{productFamilyId},
+		#{partnerId}, #{productOwnerTypeId}, 1, #{createdBy}, CURDATE(),
+		#{modifiedBy}, CURDATE());
+	</insert>
+
+	<insert id="createProductLocation"
+		parameterType="com.productcatalogue.model.Location">
+		INSERT INTO datacenter_location (REGION_ID, COUNTRY_ID, METRO_ID, CAMPUS_ID, LATITUDE, LONGITUDE, IS_UTILITY_POWER, AMOUNT_OF_UTILTIY_POWER, 
+		CONSTRUCTION_STATUS, STARTING_CONSTRUCTION_LEVEL, IS_ACTIVE, CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON)
+		VALUES (#{regionId}, #{countryId}, #{metroId}, #{campusId}, #{latitude}, #{longitude}, #{isUtilityPower}, #{amountOfUtiltiyPower}, 
+		#{constructionStatus}, #{startingConstructionLevel}, 1, #{createdBy}, CURDATE(),#{modifiedBy}, CURDATE())
+		ON DUPLICATE KEY UPDATE 
+		latitude=#{latitude},longitude=#{longitude},isUtilityPower=#{isUtilityPower},amountOfUtiltiyPower=#{amountOfUtiltiyPower},
+		constructionStatus=#{constructionStatus},startingConstructionLevel=#{startingConstructionLevel},createdBy=#{createdBy},modifiedBy=#{modifiedBy}
+		;
+	</insert>
+
+</mapper>

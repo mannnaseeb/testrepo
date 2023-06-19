@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.productcatalogue.dao.ProductDao">
+	<resultMap id="productResult"
+		type="com.productcatalogue.model.Product">
+		<result property="productId" column="productId" />
+		<result property="name" column="NAME" />
+		<result property="caption" column="CAPTION" />
+		<result property="shortDescription" column="SHORT_DESCRIPTION" />
+		<result property="longDescription" column="LONG_DESCRIPTION" />
+		<result property="image" column="IMAGE" />
+		<result property="productFamily.familyId" column="FAMILY_ID" />
+		<result property="productFamily.caption"
+			column="FAMILY_CAPTION" />
+		<result property="productFamily.name" column="FAMILY_NM" />
+		<result property="productFamily.shortDescription"
+			column="FAMILY_SHORT_DESCRIPTION" />
+		<result property="productFamily.longDescription"
+			column="FAMILY_LONG_DESCRIPTION" />
+		<result property="productFamily.image" column="FAMILY_IMAGE" />
+		<result property="productOwnerType.id"
+			column="PRODUCT_OWNER_TYPE_ID" />
+		<result property="productOwnerType.name"
+			column="PRODUCT_OWNER_TYPE_NAME" />
+	</resultMap>
+	<select id="getProductMap" resultMap="productResult">
+		select distinct
+		prod.id as productId,
+		prod.name,
+		prod.caption,
+		prod.short_description,
+		prod.long_description,
+		prod.image,
+		family.id as
+		FAMILY_ID,
+		family.caption as FAMILY_CAPTION,
+		family.name as FAMILY_NM,
+		family.short_description as FAMILY_SHORT_DESCRIPTION,
+		family.long_description as FAMILY_LONG_DESCRIPTION,
+		family.image as
+		FAMILY_IMAGE
+		from location_product_mapping map
+		left outer join product
+		prod on map.product_id=prod.id
+		left outer join product_family family on
+		map.PRODUCT_FAMILY_ID=family.id
+		left outer join datacenter_location loc
+		on map.datacenter_location_id=loc.id
+		left outer join partner part on
+		map.partner_id=part.id left
+		outer join product_owner_type ttp on
+		map.product_owner_type_id=ttp.id
+		where
+		prod.is_active=1 and
+		family.is_active=1 and map.status=1 and
+		map.is_active=1 and
+		map.approval='approved'
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and map.product_owner_type_id = #{productOwnerTypeId}
+		</if>
+		<if test="familyId != null and familyId != ''">
+			and family.id = #{familyId}
+		</if>
+		<if test="locationId != null and locationId != ''">
+			and loc.id = #{locationId}
+		</if>
+		<if test="partnerId != null and partnerId != ''">
+			and part.id = #{partnerId}
+		</if>
+		<if test="searchText != null and searchText != null">
+			<bind name="pattern" value="'%' + searchText + '%'" />
+			and
+			(prod.caption like #{pattern} or prod.SHORT_DESCRIPTION like
+			#{pattern} OR
+			prod.LONG_DESCRIPTION like #{pattern})
+		</if>
+		<if test="orderBy != null">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	<select id="getProductMapCount" resultType="java.lang.Long"
+		parameterType="map">
+		<!-- select count(1) as count from (select distinct -->
+		<!-- prod.id as productId, -->
+		<!-- prod.name, -->
+		<!-- prod.caption, -->
+		<!-- prod.short_description, -->
+		<!-- prod.long_description, -->
+		<!-- prod.image, -->
+		<!-- family.id as -->
+		<!-- FAMILY_ID, -->
+		<!-- family.caption as FAMILY_CAPTION, -->
+		<!-- family.name as FAMILY_NM, -->
+		<!-- family.short_description as FAMILY_SHORT_DESCRIPTION, -->
+		<!-- family.long_description as FAMILY_LONG_DESCRIPTION, -->
+		<!-- family.image as -->
+		<!-- FAMILY_IMAGE -->
+		<!-- from location_product_mapping map -->
+		<!-- left outer join product prod on map.product_id=prod.id -->
+		<!-- left outer join product_family family on map.PRODUCT_FAMILY_ID=family.id -->
+		<!-- left outer join datacenter_location loc on map.datacenter_location_id=loc.id -->
+		<!-- left outer join partner part on map.partner_id=part.id left -->
+		<!-- outer join product_owner_type ttp on map.product_owner_type_id=ttp.id -->
+		<!-- where prod.is_active=1 and family.is_active=1 and map.status=1 and 
+			map.is_active=1 and map.approval='approved' -->
+		<!-- select Count(1) as count from location_product_mapping map -->
+		<!-- join product -->
+		<!-- prod on prod.ID =map.PRODUCT_ID -->
+		<!-- join partner part on -->
+		<!-- part.ID=map.PARTNER_ID -->
+		<!-- where map.status=1 and map.approval='APPROVED' -->
+		<!-- and prod.IS_ACTIVE=1 and -->
+		<!-- part.IS_ACTIVE=1 -->
+
+		select SUM(count) from
+		(select Count(1) as count from (select distinct map.PRODUCT_ID from
+		location_product_mapping map
+		join product prod on prod.ID =map.PRODUCT_ID
+		join partner part on part.ID=map.PARTNER_ID
+		where map.status=1 and map.approval='APPROVED' and prod.IS_ACTIVE=1 and
+		part.IS_ACTIVE=1
+		and map.PRODUCT_OWNER_TYPE_ID=1) as abc
+		union all
+		select Count(1) as count from location_product_mapping map
+		join product prod on prod.ID =map.PRODUCT_ID
+		join partner part on part.ID=map.PARTNER_ID
+		where map.status=1 and map.approval='APPROVED' and prod.IS_ACTIVE=1 and
+		part.IS_ACTIVE=1 and map.PRODUCT_OWNER_TYPE_ID=2) count
+<!-- 		<if test="familyId != null and familyId != ''"> -->
+<!-- 			and map.PRODUCT_FAMILY_ID = #{familyId} -->
+<!-- 		</if> -->
+<!-- 		<if test="productOwnerTypeId != null and productOwnerTypeId != ''"> -->
+<!-- 			and product_owner_type_id = #{productOwnerTypeId} -->
+<!-- 		</if> -->
+<!-- 		<if test="locationId != null and locationId != ''"> -->
+<!-- 			and datacenter_location_id = #{locationId} -->
+<!-- 		</if> -->
+<!-- 		<if test="partnerId != null and partnerId != ''"> -->
+<!-- 			and partner_id = #{partnerId} -->
+<!-- 		</if> -->
+<!-- 		) as productmapcount  -->
+	</select>
+
+	<select id="getProducts" resultMap="productResult">
+		select distinct
+		prod.id as productId,
+		prod.name,
+		prod.caption,
+		prod.short_description,
+		prod.long_description,
+		prod.image,
+		family.id as
+		FAMILY_ID,
+		family.caption as FAMILY_CAPTION,
+		family.name as FAMILY_NM,
+		family.short_description as FAMILY_SHORT_DESCRIPTION,
+		family.long_description as FAMILY_LONG_DESCRIPTION,
+		family.image as
+		FAMILY_IMAGE
+		from product prod
+		left outer join product_family family on
+		family.id=prod.product_family_id
+		where
+		prod.is_active=1 and
+		family.is_active=1
+		<if test="productId != null and productId != ''">
+			and prod.id= #{productId}
+		</if>
+		<if test="productName != null and productName != ''">
+			and prod.name= #{productName}
+		</if>
+		<if test="familyId != null and familyId != ''">
+			and prod.product_family_id = #{familyId}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+
+	<select id="getProductCount" resultType="java.lang.Long"
+		parameterType="map">
+		select count(1) as count from (select distinct
+		prod.id as productId,
+		prod.name,
+		prod.caption,
+		prod.short_description,
+		prod.long_description,
+		prod.image,
+		family.id as
+		FAMILY_ID,
+		family.caption as FAMILY_CAPTION,
+		family.name as FAMILY_NM,
+		family.short_description as
+		FAMILY_SHORT_DESCRIPTION,
+		family.long_description as
+		FAMILY_LONG_DESCRIPTION,
+		family.image as
+		FAMILY_IMAGE
+		from product prod
+		left outer join product_family family on
+		family.id=prod.product_family_id
+		where
+		prod.is_active=1 and
+		loc.is_active=1 and part.is_active=1 and family.is_active=1
+		<if test="productId != null and productId != ''">
+			and id = #{productId}
+		</if>
+		<if test="productName != null and productName != ''">
+			and name = #{productName}
+		</if>
+		) as productcount
+	</select>
+
+	<insert id="createProduct"
+		parameterType="com.productcatalogue.model.Product">
+		INSERT INTO product(ID, NAME, CAPTION,
+		SHORT_DESCRIPTION, LONG_DESCRIPTION, IMAGE, IS_ACTIVE, CREATED_BY,
+		CREATED_ON, MODIFIED_BY,
+		MODIFIED_ON,PRODUCT_FAMILY_ID)
+		VALUES
+		(#{productId}, #{name}, #{caption}, #{shortDescription},
+		#{longDescription}, 1, 1,#{createdBy}, CURDATE(), #{modifiedBy},
+		CURDATE(), 1)
+		ON DUPLICATE KEY UPDATE
+		short_description=#{shortDescription},
+		long_description=#{longDescription}
+	</insert>
+
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.loyaltyservice.dao.TransactionDao">
+	<resultMap id="transactionResult"
+		type="com.loyaltyservice.model.Transaction">
+		<result property="transactionId" column="transactionId" />
+		<result property="customer.customerId" column="customerId" />
+		<result property="transactionDate" column="transactionDate" />
+		<result property="event.id" column="eventId" />
+		<result property="event.name" column="eventName" />
+		<result property="event.description" column="eventDesc" />
+		<result property="point" column="points" />
+	</resultMap>
+
+	<select id="getLeaderBoardPoints" resultMap="transactionResult">
+
+		select Sum(POINTS) from transactions trans inner join
+		tasktype tt on tt.ID=trans.TRANSACTION_TYPE_ID
+		where
+
+		<if test="customerId != null and customerId != ''">
+			t.customer_id=#{customerId}
+		</if>
+		<if test="transactionId != null and transactionId != ''">
+			and t.transaction_id=#{transactionId}
+		</if>
+		group by CUSTOMER_ID, tt.NAME having tt.NAME='EARN'
+		<if test="orderBy != null">
+			order by ${orderBy} desc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+
+	<select id="getTransaction" resultMap="transactionResult">
+		select 
+		t.transaction_id as transactionId,
+		t.customer_id as customerId,
+		t.transaction_date transactionDate,
+		et.id as eventtypeId,
+		et.name as eventTypeName,
+		et.description as eventTypeDesc,
+		e.event_id as eventId,
+		e.event_name as eventName,
+		e.event_description as eventDesc,
+		t.points as points
+		from
+		transactions t
+		left outer join event e on e.event_id = t.event_id
+		left outer join eventtype et on et.id = t.event_id
+		where
+		e.is_active = 1
+		<if test="transactionId != null and transactionId != ''">
+			and t.transaction_id=#{transactionId}
+		</if>
+		<if test="customerId != null and customerId != ''">
+			and t.customer_id=#{customerId}
+		</if>
+		<if test="eventId != null and eventId != ''">
+			and t.event_id=#{eventId}
+		</if>
+		<if test="orderBy != null">
+			order by ${orderBy} desc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+
+      <select id="getTransactionCount" resultType="java.lang.Long"
+		parameterType="map">
+		select
+		count(1) as count
+		from
+		transactions t
+		left outer join event e on e.event_id = t.event_id
+		left outer join eventtype et on et.id = t.event_id
+		where
+		e.is_active = 1
+		<if test="transactionId != null and transactionId != ''">
+			and t.transaction_id=#{transactionId}
+		</if>
+		<if test="customerId != null and customerId != ''">
+			and t.customer_id=#{customerId}
+		</if>
+		<if test="eventId != null and eventId != ''">
+			and t.event_id=#{eventId}
+		</if>
+	   </select>
+
+	<insert id="createTransaction"
+		parameterType="com.loyaltyservice.model.Transaction">
+		insert into transactions(customer_id, transaction_date,
+		transaction_type_id,
+		event_id, points)
+		values(#{customer.customerId},
+		now(), #{eventType.id}, #{event.id}, #{point})
+	</insert>
+
+</mapper>

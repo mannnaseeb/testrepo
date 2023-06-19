@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.productcatalogue.dao.ProductFamilyDao">
+	<select id="getFamilyMap"
+		resultType="com.productcatalogue.model.ProductFamily">
+		select distinct
+		family.id as familyId,
+		family.name,
+		family.caption,
+		family.short_description as shortDescription,
+		family.long_description as longDescription,
+		family.image
+		from location_product_mapping map
+		left outer join product_family family on map.product_family_id=family.id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.is_active=1 and family.is_active=1 and map.status=1 and map.approval='approved'
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and map.product_ownerType_id =  #{productOwnerTypeId}
+		</if>
+		<if test="familyId != null and familyId != ''">
+			and map.product_family_id =  #{familyId}
+		</if>
+		<if test="locationIds != null and locationIds != ''">
+			and loc.id in  (#{locationIds})
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	
+	<select id="getFamilyMapCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		family.id as familyId,
+		family.name,
+		family.caption,
+		family.short_description as shortDescription,
+		family.long_description as longDescription,
+		family.image
+		from location_product_mapping map
+		left outer join product_family family on map.product_family_id=family.id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.is_active=1 and family.is_active=1 and map.status=1 and map.approval='approved'
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and product_owner_type_id = #{productOwnerTypeId}
+		</if> ) as familymapcount
+	</select>
+
+	<select id="getFamilies"
+		resultType="com.productcatalogue.model.ProductFamily">
+		select
+		family.id as familyId,
+		family.name,
+		family.caption,
+		family.short_description as shortDescription,
+		family.long_description as longDescription,
+		family.image
+		from product_family family
+		where 
+		family.is_active=1
+		<if test="familyId != null and familyId != ''">
+			and family.id = #{familyId}
+		</if>
+		<if test="familyName != null and familyName != ''">
+			and family.name = #{familyName}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	
+	<select id="getFamilyCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(distinct(id)) as count from product_family where is_active=1 
+	</select>
+
+	<insert id="createProductFamily"
+		parameterType="com.productcatalogue.model.ProductFamily">
+		INSERT INTO product_family(ID, NAME, CAPTION, SHORT_DESCRIPTION,LONG_DESCRIPTION, IMAGE, IS_ACTIVE, CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON)
+		VALUES(#{familyId}, #{name}, #{caption}, #{shortDescription}, #{longDescription}, #{image}, 1, #{createdBy}, CURDATE(),#{modifiedBy}, CURDATE())
+		ON DUPLICATE KEY UPDATE 
+		caption=#{caption},short_description=#{shortDescription}, long_description=#{longDescription}
+	</insert>
+</mapper>

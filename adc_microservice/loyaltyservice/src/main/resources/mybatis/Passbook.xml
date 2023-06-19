@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.loyaltyservice.dao.PassbookDao">
+	<resultMap id = "passbookResult" type = "com.loyaltyservice.model.Passbook">
+      <result property = "passbookId" column = "passbookId"/>
+      <result property = "customer.customerId" column = "customerId"/>
+      <result property = "transaction.transactionId" column = "transactionId"/>
+      <result property = "balance" column = "balance"/>
+      <result property = "entryDate" column = "entry_date"/>
+   </resultMap>   
+	<select id="getPassbook" resultMap = "passbookResult">
+        select 
+		pass.pass_id as passbookId,
+		pass.customer_id as customerId,
+		trans.transaction_id as transactionId,
+		pass.balance,
+		pass.entry_date
+		from customer_passbook pass
+		left outer join transactions trans on trans.transaction_id=pass.transaction_id
+		where pass.customer_id = #{customerId}
+		<if test="transactionId != null and transactionId != ''">
+			and pass.transaction_id = #{transactionId}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy}
+		</if>
+		<if test="sortType != null and sortType != ''">
+		<bind name="pattern" value="'%' + sortType + '%'" />
+			${sortType} 
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+    </select>
+    
+    <select id="getPassbookCount" resultType="java.lang.Long"
+		parameterType="map">
+		select
+		count(1) as count
+		from
+		customer_passbook pass
+		left outer join transactions trans on trans.transaction_id=pass.transaction_id
+		left outer join eventtype et on et.id = trans.event_id
+		<if test="transactionId != null and transactionId != ''">
+			and pass.transaction_id=#{transactionId}
+		</if>
+		<if test="customerId != null and customerId != ''">
+			and pass.customer_id=#{customerId}
+		</if>
+	   </select>
+
+	<insert id="createPassbook" parameterType="com.loyaltyservice.model.Passbook">
+    	insert into customer_passbook(customer_id, transaction_id, balance, entry_date)
+    	values(#{customer.customerId}, #{transaction.transactionId}, #{balance}, now())
+    </insert>
+</mapper>

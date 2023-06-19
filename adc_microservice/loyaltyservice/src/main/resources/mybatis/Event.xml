@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.loyaltyservice.dao.EventDao">
+	<resultMap id = "eventResult" type = "com.loyaltyservice.model.Event">
+      <result property = "id" column = "eventId"/>
+      <result property = "name" column = "eventName"/>
+      <result property = "description" column = "eventDesc"/>
+      <result property = "evetType.id" column = "eventTypeId"/>
+      <result property = "evetType.name" column = "eventTypeName"/>
+      <result property = "rule.id" column = "ruleId"/>
+      <result property = "rule.name" column = "ruleName"/>
+      <result property = "rule.description" column = "ruleDesc"/>
+      <result property = "rule.ruleCalc" column = "ruleCalc"/>
+      <result property = "campaign.id" column = "campaignId"/>
+      <result property = "campaign.name" column = "campaignName"/>
+      <result property = "campaign.description" column = "campaignDesc"/>
+      <result property = "createdBy" column = "createdBy"/>
+      <result property = "createdOn" column = "createdDate"/>
+      <result property = "modifiedBy" column = "modifiedBy"/>
+      <result property = "modifiedOn" column = "modifiedDate"/>
+    </resultMap> 
+	<select id="getEvent" resultMap="eventResult">
+		select 
+		e.event_id as eventId,
+		e.event_name as eventName,
+		e.event_description as eventDesc,
+        e.event_type_id as eventTypeId,
+        ttp.name as eventTypeName,
+        r.rule_id as ruleId,
+        r.rule_name as ruleName,
+        r.description as ruleDesc,
+		r.rule_calc as ruleCalc,
+		c.campaign_id as campaignId,
+        c.campaign_name as campaignName,
+        c.description as campaignDesc,
+		e.created_by as createdBy,
+		e.created_on as createdDate,
+		e.modified_by as modifiedBy,
+		e.modified_on as modifiedDate
+		from `event` e
+        left outer join tasktype ttp on ttp.id=e.event_type_id
+        left outer join rule r on r.rule_id=e.rule_id
+        left outer join campaign c on c.campaign_id=e.campaign_id
+        where c.is_active=1 and r.is_active=1 and ttp.is_active=1
+		<if test="eventId != null and eventId != ''">
+			and e.event_id = #{eventId}
+		</if>
+		<if test="eventTypeId != null and eventTypeId != ''">
+			and e.event_type_id = #{eventTypeId}
+		</if>
+		<if test="eventName != null and eventName != ''">
+			and e.event_name = #{eventName}
+		</if>
+		<if test="ruleId != null and ruleId != ''">
+			and e.rule_id = #{ruleId}
+		</if>
+		<if test="campaignId != null and campaignId != ''">
+			and e.campaign_id = #{campaignId}
+		</if>
+		<if test="orderBy != null">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	<insert id="createEvent" parameterType="com.loyaltyservice.model.Event">
+	insert into event(EVENT_NAME, EVENT_DESCRIPTION, EVENT_TYPE_ID, RULE_ID, CAMPAIGN_ID, CREATED_BY, CREATED_ON, MODIFIED_BY, MODIFIED_ON, IS_ACTIVE)
+	value(#{name}, #{description}, #{evetType.id}, #{rule.id}, #{campaign.id}, #{createdBy}, now(), #{modifiedBy}, now(), 1);
+	</insert>
+    <select id="getCoupon" resultMap = "eventResult">
+    </select>
+    <insert id="createCoupon" parameterType="com.loyaltyservice.model.Event">
+    </insert>
+</mapper>

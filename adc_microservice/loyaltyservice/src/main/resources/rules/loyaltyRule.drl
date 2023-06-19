@@ -1,0 +1,28 @@
+import com.loyaltyservice.model.Event;
+import com.loyaltyservice.model.Transaction;
+import com.loyaltyservice.model.Passbook;
+
+global com.loyaltyservice.model.Transaction transaction;
+
+
+
+dialect "mvel"
+
+rule "Zero point"
+	when 
+		Passbook(balance == 0 || balance < 0)
+	then
+		System.out.println("==Cannot do this transaction, since balance is low");
+		transaction.setPoint(-1);
+	end
+	
+rule "Less Point"
+	when
+		Passbook(balance < transaction.getPoint())
+	then
+		System.out.println("==Cannot do this transaction, since coupon value is more than balance");
+		transaction.setPoint(-1);
+	end
+		
+		
+	

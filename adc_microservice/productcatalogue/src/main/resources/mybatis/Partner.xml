@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.productcatalogue.dao.PartnerDao">
+	<resultMap id="partnerResult"
+		type="com.productcatalogue.model.Partner">
+		<result property="partnerId" column="partnerId" />
+		<result property="name" column="NAME" />
+		<result property="shortDescription" column="SHORT_DESCRIPTION" />
+		<result property="longDescription" column="LONG_DESCRIPTION" />
+		<result property="websiteUrl" column="WEBSITE_URL" />
+		<result property="image" column="IMAGE" />
+		<result property="category.id" column="CATEGORY_ID" />
+		<result property="category.name" column="CATEGORY_NAME" />
+		<result property="category.sequence" column="CATEGORY_SEQUENCE" />
+		<result property="subCategory.id" column="SUB_CATEGORY_ID" />
+		<result property="subCategory.name" column="SUB_CATEGORY_NAME" />
+		<result property="subCategory.sequence"
+			column="SUB_CATEGORY_SEQUENCE" />
+	</resultMap>
+	<select id="getPartnerMap"
+		resultMap="partnerResult" parameterType="map">
+		select distinct
+		part.id as partnerId,
+		part.name,
+		part.short_description,
+		part.long_description,
+		part.website_url,
+		part.image
+		from location_product_mapping map
+		left outer join partner part on part.id=map.PARTNER_ID
+		left outer join product_family family on map.product_family_id=family.id
+		left outer join datacenter_location loc on map.datacenter_location_id=loc.id
+		where
+		part.is_active=1 and family.is_active=1 and map.status=1 and map.approval='approved'
+		<if test="familyId != null and familyId != ''">
+			and family.id = #{familyId}
+		</if>
+		<if test="locationId != null and locationId != ''">
+			and loc.id = #{locationId}
+		</if>
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and product_owner_type_id = #{productOwnerTypeId}
+		</if>
+		<if test="searchText != null and searchText != null">
+			<bind name="pattern" value="'%' + searchText + '%'" />
+			and
+			(part.name like #{pattern} or part.SHORT_DESCRIPTION like
+			#{pattern} OR
+			part.LONG_DESCRIPTION like #{pattern})
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	<select id="getPartnerMapCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		part.id as partnerId,
+		part.name,
+		part.short_description,
+		part.long_description,
+		part.website_url,
+		part.image
+		from location_product_mapping map
+		left outer join partner part on part.id=map.PARTNER_ID
+		left outer join product_family family on map.product_family_id=family.id
+		left outer join datacenter_location loc on map.datacenter_location_id=loc.id
+		where
+		part.is_active=1 and family.is_active=1 and map.status=1 and map.approval='approved'
+		<if test="familyId != null and familyId != ''">
+			and family.id = #{familyId}
+		</if>
+		<if test="locationId != null and locationId != ''">
+			and loc.id = #{locationId}
+		</if>
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and product_owner_type_id = #{productOwnerTypeId}
+		</if>
+		<if test="searchText != null and searchText != null">
+			<bind name="pattern" value="'%' + searchText + '%'" /> and
+			(part.name like #{pattern} or part.SHORT_DESCRIPTION like #{pattern}
+			OR part.LONG_DESCRIPTION like #{pattern}) </if> ) as partnermapcount
+	</select>
+	
+	<select id="getPartners"
+		resultMap="partnerResult" parameterType="map">
+		select distinct
+		part.id as partnerId,
+		part.name,
+		part.short_description,
+		part.long_description,
+		part.website_url,
+		part.image
+		from partner part
+		where part.id = #{partnerId}
+		
+<!-- 			BUG ID: 911	
+			part.is_active=1 -->
+<!-- 		<if test="partnerId != null and partnerId != ''"> -->
+<!-- 			and part.id = #{partnerId} -->
+<!-- 		</if> -->
+		<if test="partnerName != null and partnerName != ''">
+			and part.name = #{partnerName}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	
+	<select id="getPartnerCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select distinct
+		part.id as partnerId,
+		part.name,
+		part.short_description,
+		part.long_description,
+		part.website_url,
+		part.image
+		from partner part
+		where
+		part.is_active=1) as partnercount
+	</select>
+	<select id="getProductLocationMap" resultType="com.productcatalogue.model.ProductLocationRequest" parameterType="map">
+		select
+			prod.id as productId,
+			prod.name as productName,
+			family.id as productFamilyId,
+			family.name as productFamilyName,
+			map.datacenter_location_id as dataCenterLocationId,
+			(select name from campus where id = loc.campus_id) as dataCenterLocationName,
+			part.id as partnerId,
+			part.name as partnerName,
+			map.approval as status,
+			map.status as isActive
+		from location_product_mapping map
+		left outer join product prod on prod.id = map.product_id
+        left outer join partner part on map.partner_id = part.id
+		left outer join product_family family on family.id = map.product_family_id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.approval in ('approved','pending', 'Approval Pending')
+		<if test="partnerId != null and partnerId != ''">
+			and map.partner_id=#{partnerId}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			order by ${orderBy} asc
+		</if>
+		<if test="limit != null and limit != ''">
+			limit #{limit}
+		</if>
+		<if test="offset != null and offset != ''">
+			offset #{offset}
+		</if>
+	</select>
+	
+	<select id="getProductMapCount" resultType="java.lang.Long"
+		parameterType="map">
+		select count(1) as count from (select
+			prod.id as productId
+		from location_product_mapping map
+		left outer join product prod on prod.id = map.product_id
+        left outer join partner part on map.partner_id = part.id
+		left outer join product_family family on family.id = map.product_family_id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.approval in ('approved','pending', 'Approval Pending')
+		<if test="partnerId != null and partnerId != ''">
+			and map.partner_id=#{partnerId}
+		</if> ) as productmapcount
+	</select>
+	<select id="getLocationMapCount" resultType="java.lang.Long"
+		parameterType="map">
+		select count(1) as count from (select
+			distinct map.datacenter_location_id as dataCenterLocationId
+		from location_product_mapping map
+		left outer join product prod on prod.id = map.product_id
+        left outer join partner part on map.partner_id = part.id
+		left outer join product_family family on family.id = map.product_family_id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.approval in ('approved','pending', 'Approval Pending')
+		<if test="partnerId != null and partnerId != ''">
+			and map.partner_id=#{partnerId}
+		</if> ) as locationMapCount
+	</select>
+	
+	<select id="getProductLocationMapTotalCount" resultType="java.lang.Long" parameterType="map">
+		select count(1) as count from (select
+			prod.id as productId,
+			prod.name as productName,
+			family.id as productFamilyId,
+			family.name as productFamilyName,
+			map.datacenter_location_id as dataCenterLocationId,
+			(select name from campus where id = loc.campus_id) as dataCenterLocationName,
+			part.id as partnerId,
+			part.name as partnerName,
+			map.approval as status,
+			map.status as isActive
+		from location_product_mapping map
+		left outer join product prod on prod.id = map.product_id
+        left outer join partner part on map.partner_id = part.id
+		left outer join product_family family on family.id = map.product_family_id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.approval in ('approved','pending', 'Approval Pending')
+		<if test="partnerId != null and partnerId != ''">
+			and map.partner_id=#{partnerId}
+		</if> ) as productlocationmapcount
+	</select>
+	<!-- <select id="getLocationMapCounts" resultType="java.lang.Long"
+		parameterType="map">
+		select count(distinct(datacenter_location_id)) from
+		location_product_mapping where partner_id=#{partnerId} and status=1 and approval='approved'
+		<if test="productOwnerTypeId != null and productOwnerTypeId != ''">
+			and product_owner_type_id =  #{productOwnerTypeId}
+		</if>
+	</select> -->
+	<select id="getProductLocationMappingCount" resultType="java.lang.Long"
+		parameterType="map"> 
+		select count(1) as count from (select
+			map.partner_id
+		from location_product_mapping map
+		left outer join product prod on prod.id = map.product_id
+        left outer join partner part on map.partner_id = part.id
+		left outer join product_family family on family.id = map.product_family_id
+		left outer join datacenter_location loc on map.datacenter_location_id = loc.id
+		where map.approval in ('approved','pending', 'Approval Pending')
+		<if test="partnerId != null and partnerId != ''">
+			and map.partner_id in (#{partnerId})
+		</if> ) as productlocationmappingcount
+	</select>
+	<insert id="createPartner"
+		parameterType="com.productcatalogue.model.Partner">
+		INSERT INTO partner (id,NAME,SEQUENCE,IS_ACTIVE,CREATED_BY, CREATED_ON,MODIFIED_BY,MODIFIED_ON,PRT_CATEGORY_ID,PRT_SUB_CATEGORY_ID,PRT_ADDRESS_ID, 
+		PRT_CONTACT_ID, SHORT_DESCRIPTION,LONG_DESCRIPTION,WEBSITE_URL, IMAGE)
+		VALUES (#{partnerId},#{name},1,1,'admin',now(),'admin',now(),1,1,1,1,#{shortDescription},#{longDescription}, #{websiteUrl},#{image}) 
+		ON DUPLICATE KEY UPDATE
+		name = #{name},SHORT_DESCRIPTION=#{shortDescription}, LONG_DESCRIPTION=#{longDescription}, WEBSITE_URL=#{websiteUrl}, IMAGE=#{image}, IS_ACTIVE = #{is_active};
+	</insert>
+	
+	<insert id="createPartnerMap" parameterType="com.productcatalogue.model.ProductLocationRequest">
+		INSERT INTO location_product_mapping(datacenter_location_id, product_id, product_family_id, partner_id, product_owner_type_id,is_active, created_by, created_on, modified_by, modified_on, approval, status)
+		values(#{dataCenterLocationId}, #{productId}, #{productFamilyId}, #{partnerId}, 2, #{isActive}, 'admin', now(), 'admin', now(), #{status}, #{isActive})
+	</insert>
+	<update id="updatePartner" parameterType="com.productcatalogue.model.Partner">
+		update partner set name = 'test', sequence =1, is_active=1
+		,modified_on=now(), prt_category_id=1, prt_sub_category_id=1
+		,prt_address_id =1 , prt_contact_id=1, SHORT_DESCRIPTION= #{shortDescription}
+		,long_description=#{longDescription}, WEBSITE_URL=#{websiteUrl}, image=#{image} where id= #{partnerId}
+	</update>
+	<delete id="deletePartnerMap" parameterType="map">
+		delete from location_product_mapping where partner_id=#{partnerId} and datacenter_location_id=#{locationId}
+	</delete>
+</mapper>
